@@ -13,6 +13,41 @@ use tracing::{debug, error, info, trace};
 
 use crate::feed::Item;
 
+pub async fn fetch_cap(item: Item) -> Result<Cap> {
+	let guid = item.guid;
+	info!(%guid, "fetching CAP");
+	let resp = reqwest::get(&item.link).await?;
+
+	if !resp.status().is_success() {
+		error!(status=%resp.status(), "failed to fetch CAP");
+		return Err(eyre!("failed to fetch CAP {}", guid));
+	}
+
+	info!(
+		%guid,
+		age=%resp.headers().get("age").map(|v| v.to_str()).transpose()?.unwrap_or("?"),
+		bytes=%resp.headers().get("content-length").map(|v| v.to_str()).transpose()?.unwrap_or("?"),
+		"got CAP"
+	);
+	trace!(%guid, status=?resp.status(), headers=?resp.headers(), "headers");
+
+	let body = resp.text().await?;
+	debug!(%guid, chars=%body.len(), "decoded body as text");
+	trace!(%guid, body=%body, "decoded body");
+
+	let cap: Cap = serde_xml_rs::from_str(&body)?;
+	trace!(%guid, ?cap, "parsed cap");
+
+	info!(
+		%guid,
+		about=%cap.info.headline,
+		areas=?cap.info.areas.iter().map(|a| &a.desc).collect::<Vec<_>>(),
+		"parsed cap"
+	);
+
+	Ok(cap)
+}
+
 #[derive(Clone, Debug, Deserialize)]
 pub struct Cap {
 	#[serde(rename = "identifier")]
@@ -140,39 +175,4 @@ where
 	}
 
 	Ok(Polygon::new(line, Vec::new()))
-}
-
-pub async fn fetch_cap(item: Item) -> Result<Cap> {
-	let guid = item.guid;
-	info!(%guid, "fetching CAP");
-	let resp = reqwest::get(&item.link).await?;
-
-	if !resp.status().is_success() {
-		error!(status=%resp.status(), "failed to fetch CAP");
-		return Err(eyre!("failed to fetch CAP {}", guid));
-	}
-
-	info!(
-		%guid,
-		age=%resp.headers().get("age").map(|v| v.to_str()).transpose()?.unwrap_or("?"),
-		bytes=%resp.headers().get("content-length").map(|v| v.to_str()).transpose()?.unwrap_or("?"),
-		"got CAP"
-	);
-	trace!(%guid, status=?resp.status(), headers=?resp.headers(), "headers");
-
-	let body = resp.text().await?;
-	debug!(%guid, chars=%body.len(), "decoded body as text");
-	trace!(%guid, body=%body, "decoded body");
-
-	let cap: Cap = serde_xml_rs::from_str(&body)?;
-	trace!(%guid, ?cap, "parsed cap");
-
-	info!(
-		%guid,
-		about=%cap.info.headline,
-		areas=?cap.info.areas.iter().map(|a| &a.desc).collect::<Vec<_>>(),
-		"parsed cap"
-	);
-
-	Ok(cap)
 }

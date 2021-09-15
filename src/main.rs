@@ -2,8 +2,9 @@ use std::{collections::HashSet, env::var, path::PathBuf};
 
 use color_eyre::eyre::Result;
 use futures::future::try_join_all;
+use geo::prelude::Intersects;
 use structopt::StructOpt;
-use tracing::debug;
+use tracing::{info, debug};
 
 mod bound;
 mod cap;
@@ -57,7 +58,7 @@ async fn main() -> Result<()> {
 	db.drop_tree("cache")?; // DEV
 	let cache = db.open_tree("cache")?;
 
-	let caps = try_join_all(args.cap_rss.iter().cloned().map(move |url| {
+	let mut caps = try_join_all(args.cap_rss.iter().cloned().map(move |url| {
 		let tree = cache.clone();
 		tokio::spawn(async move { feed::fetch_feed(tree, url).await })
 	}))
@@ -70,7 +71,12 @@ async fn main() -> Result<()> {
 
 	debug!("fetched {} new caps", caps.len());
 
-	// parse local geojson of areas we care about
+	if caps.is_empty() {
+		info!("nothing to do");
+		return Ok(());
+	}
+
+	info!("loading geojson boundaries");
 
 	let mut bounds = Vec::with_capacity(1);
 	for entry in glob::glob(
@@ -83,7 +89,7 @@ async fn main() -> Result<()> {
 		bounds.push(tokio::spawn(async { bound::read_geojson(entry?).await }));
 	}
 
-	let _bounds = try_join_all(bounds)
+	let bounds = try_join_all(bounds)
 		.await?
 		.into_iter()
 		.collect::<Result<Vec<_>, _>>()?
@@ -91,7 +97,15 @@ async fn main() -> Result<()> {
 		.flatten()
 		.collect::<Vec<_>>();
 
-	// filter for intersections and levels we care about
+	info!(boundaries=%bounds.len(), "checking intersections");
+	caps.retain(|cap| {
+		cap.info.areas.iter().map(|a| &a.polygons).flatten().any(|p| bounds.iter().any(|b| b.intersects(p)))
+	});
+	info!(caps=%caps.len(), "filtered caps against boundaries");
+
+	dbg!(caps);
+
+	// filter for levels we care about?
 	// prepare for display
 	// print out
 	// make call to chat api (in prod)
