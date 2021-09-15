@@ -13,7 +13,12 @@ pub async fn fetch_feed(cache: Tree, url: String) -> Result<Vec<Cap>> {
 	info!(%url, "fetching CAP feed");
 	let resp = reqwest::get(&url).await?.error_for_status()?;
 
-	let content_type = resp.headers().get("content-type").map(|v| v.to_str()).transpose()?.unwrap_or("?");
+	let content_type = resp
+		.headers()
+		.get("content-type")
+		.map(|v| v.to_str())
+		.transpose()?
+		.unwrap_or("?");
 
 	info!(
 		%url,
@@ -31,7 +36,11 @@ pub async fn fetch_feed(cache: Tree, url: String) -> Result<Vec<Cap>> {
 	debug!(%url, chars=%body.len(), "decoded body as text");
 	trace!(%url, body=%body, "decoded body");
 
-	let items = match (media_type.type_(), media_type.subtype().as_str(), media_type.suffix().map(|s| s.as_str())) {
+	let items = match (
+		media_type.type_(),
+		media_type.subtype().as_str(),
+		media_type.suffix().map(|s| s.as_str()),
+	) {
 		(mime::APPLICATION, "atom", Some("xml")) => todo!("atom support"),
 		(mime::APPLICATION, "rss", Some("xml")) => parse_rss(&url, &body)?,
 		_ => return Err(eyre!("unsupported media type: {}", media_type)),

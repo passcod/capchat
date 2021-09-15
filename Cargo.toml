@@ -24,7 +24,7 @@ chrono = { version = "0.4.19", features = ["serde"] }
 color-eyre = "0.5.11"
 futures = "0.3.14"
 geo = "0.18.0"
-geojson = "0.22.2"
+geojson = { version = "0.22.2", features = ["geo-types"] }
 glob = "0.3.0"
 mime = "0.3.16"
 reqwest = { version = "0.11.3", features = ["json", "rustls-tls"], default-features = false }

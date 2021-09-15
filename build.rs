@@ -1,3 +1,3 @@
 fn main() {
-    embed_resource::compile("capchat-manifest.rc");
+	embed_resource::compile("capchat-manifest.rc");
 }

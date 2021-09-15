@@ -4,11 +4,14 @@ use color_eyre::eyre::Result;
 use futures::future::try_join_all;
 use geo::prelude::Intersects;
 use structopt::StructOpt;
-use tracing::{info, debug};
+use tracing::{debug, info};
+
+use output::Output;
 
 mod bound;
 mod cap;
 mod feed;
+mod output;
 
 #[derive(Clone, Debug, StructOpt)]
 struct Args {
@@ -26,6 +29,9 @@ struct Args {
 
 	#[structopt(long, default_value = "_cache")]
 	cache_db: PathBuf,
+
+	#[structopt(long, default_value = "map")]
+	output: Output,
 
 	#[structopt(long)]
 	workplace_token: Option<String>,
@@ -58,7 +64,7 @@ async fn main() -> Result<()> {
 
 	debug!(path=?args.cache_db, "opening sled database");
 	let db = sled::open(&args.cache_db)?;
-	db.drop_tree("cache")?; // DEV
+	// db.drop_tree("cache")?; // DEV
 	let cache = db.open_tree("cache")?;
 
 	let mut caps = try_join_all(args.cap.iter().cloned().map(move |url| {
@@ -102,18 +108,30 @@ async fn main() -> Result<()> {
 
 	info!(boundaries=%bounds.len(), "checking intersections");
 	caps.retain(|cap| {
-		cap.info.areas.iter().map(|a| &a.polygons).flatten().any(|p| bounds.iter().any(|b| b.intersects(p)))
+		cap.info
+			.areas
+			.iter()
+			.map(|a| &a.polygons)
+			.flatten()
+			.any(|p| bounds.iter().any(|b| b.intersects(p)))
 	});
 	info!(caps=%caps.len(), "filtered caps against boundaries");
 
 	caps.retain(|cap| cap.info.severity >= args.severity);
 	info!(caps=%caps.len(), severity=?args.severity, "filtered caps against severity");
 
-	dbg!(caps);
+	let _output = match args.output {
+		Output::Json => {
+			serde_json::to_writer(std::io::stdout(), &caps)?;
+			return Ok(());
+		}
+		Output::Text => output::text(caps)?,
+		Output::Image => output::image(caps)?,
+		Output::ImageMap => output::image_with_map(caps)?,
+	};
 
-	// prepare for display
-	// print out
-	// make call to chat api (in prod)
+	// display to console
+	// make call to chat apis
 
 	Ok(())
 }

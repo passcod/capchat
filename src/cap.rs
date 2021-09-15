@@ -1,14 +1,16 @@
 use std::{
 	collections::HashMap,
 	hash::{Hash, Hasher},
+	iter::FromIterator,
 	num::ParseFloatError,
 	str::FromStr,
 };
 
 use chrono::{DateTime, Utc};
 use color_eyre::eyre::{eyre, Result};
-use geo::{CoordNum, Coordinate, LineString, Polygon};
-use serde::{Deserialize, Deserializer};
+use geo::{CoordFloat, CoordNum, Coordinate, GeometryCollection, LineString, Polygon};
+use geojson::{FeatureCollection, GeoJson};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use tracing::{debug, error, info, trace};
 
 use crate::feed::Item;
@@ -48,7 +50,7 @@ pub async fn fetch_cap(item: Item) -> Result<Cap> {
 	Ok(cap)
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Cap {
 	#[serde(rename = "identifier")]
 	pub guid: String,
@@ -79,7 +81,7 @@ impl PartialEq<Self> for Cap {
 
 impl Eq for Cap {}
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Info {
 	pub category: String,
 	pub event: String,
@@ -105,7 +107,7 @@ pub struct Info {
 	pub areas: Vec<Area>,
 }
 
-#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Severity {
 	Minor,
 	Moderate,
@@ -127,12 +129,16 @@ impl FromStr for Severity {
 	}
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Area {
 	#[serde(rename = "areaDesc")]
 	pub desc: String,
 
-	#[serde(rename = "polygon", deserialize_with = "polygons_de")]
+	#[serde(
+		rename = "polygon",
+		deserialize_with = "polygons_de",
+		serialize_with = "polygons_ser"
+	)]
 	pub polygons: Vec<Polygon<f64>>,
 }
 
@@ -197,4 +203,15 @@ where
 	}
 
 	Ok(Polygon::new(line, Vec::new()))
+}
+
+fn polygons_ser<S, T>(polys: &Vec<Polygon<T>>, serializer: S) -> Result<S::Ok, S::Error>
+where
+	S: Serializer,
+	T: CoordNum + CoordFloat,
+{
+	let gc = GeometryCollection::<T>::from_iter(polys.clone());
+	let fc = FeatureCollection::from(&gc);
+	let geojson = GeoJson::FeatureCollection(fc);
+	geojson.serialize(serializer)
 }
