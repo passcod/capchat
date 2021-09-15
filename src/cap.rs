@@ -84,7 +84,7 @@ pub struct Info {
 	pub category: String,
 	pub event: String,
 	pub urgency: String,
-	pub severity: String,
+	pub severity: Severity,
 	pub certainty: String,
 	pub onset: DateTime<Utc>,
 	pub expires: DateTime<Utc>,
@@ -103,6 +103,28 @@ pub struct Info {
 
 	#[serde(rename = "area")]
 	pub areas: Vec<Area>,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+pub enum Severity {
+	Minor,
+	Moderate,
+	Severe,
+	Extreme,
+}
+
+impl FromStr for Severity {
+	type Err = String;
+
+	fn from_str(s: &str) -> Result<Self, Self::Err> {
+		match s.to_lowercase().as_str() {
+			"minor" => Ok(Self::Minor),
+			"moderate" => Ok(Self::Moderate),
+			"severe" => Ok(Self::Severe),
+			"extreme" => Ok(Self::Extreme),
+			_ => Err(format!("invalid severity: {}", s)),
+		}
+	}
 }
 
 #[derive(Clone, Debug, Deserialize)]

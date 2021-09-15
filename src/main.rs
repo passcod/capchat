@@ -18,6 +18,9 @@ struct Args {
 	#[structopt(long)]
 	cap: Vec<String>,
 
+	#[structopt(long, default_value = "Minor")]
+	severity: cap::Severity,
+
 	#[structopt(long, default_value = ".")]
 	boundaries: PathBuf,
 
@@ -54,7 +57,7 @@ async fn main() -> Result<()> {
 	debug!(?args, "parsed arguments");
 
 	debug!(path=?args.cache_db, "opening sled database");
-	let db = sled::open(args.cache_db)?;
+	let db = sled::open(&args.cache_db)?;
 	db.drop_tree("cache")?; // DEV
 	let cache = db.open_tree("cache")?;
 
@@ -103,9 +106,11 @@ async fn main() -> Result<()> {
 	});
 	info!(caps=%caps.len(), "filtered caps against boundaries");
 
+	caps.retain(|cap| cap.info.severity >= args.severity);
+	info!(caps=%caps.len(), severity=?args.severity, "filtered caps against severity");
+
 	dbg!(caps);
 
-	// filter for levels we care about?
 	// prepare for display
 	// print out
 	// make call to chat api (in prod)
