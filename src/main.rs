@@ -15,8 +15,8 @@ struct Args {
 	#[structopt(short, parse(from_occurrences))]
 	verbose: u8,
 
-	#[structopt(long, default_value = "https://alerts.metservice.com/cap/rss")]
-	cap_rss: Vec<String>,
+	#[structopt(long)]
+	cap: Vec<String>,
 
 	#[structopt(long, default_value = ".")]
 	boundaries: PathBuf,
@@ -58,7 +58,7 @@ async fn main() -> Result<()> {
 	db.drop_tree("cache")?; // DEV
 	let cache = db.open_tree("cache")?;
 
-	let mut caps = try_join_all(args.cap_rss.iter().cloned().map(move |url| {
+	let mut caps = try_join_all(args.cap.iter().cloned().map(move |url| {
 		let tree = cache.clone();
 		tokio::spawn(async move { feed::fetch_feed(tree, url).await })
 	}))
