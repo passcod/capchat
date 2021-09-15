@@ -1,23 +1,12 @@
-use std::{
-	collections::{HashMap, HashSet},
-	env::var,
-	hash::{Hash, Hasher},
-	mem::take,
-	num::ParseFloatError,
-	path::PathBuf,
-	str::FromStr,
-};
+use std::mem::take;
 
-use chrono::{DateTime, Utc};
 use color_eyre::eyre::{eyre, Result};
 use futures::future::try_join_all;
-use geo::{Coordinate, CoordNum, LineString, Polygon};
-use serde::{Deserialize, Deserializer};
+use serde::Deserialize;
 use sled::Tree;
-use structopt::StructOpt;
 use tracing::{debug, error, info, trace};
 
-use crate::cap::fetch_cap;
+use crate::cap::{fetch_cap, Cap};
 
 pub async fn fetch_feed(cache: Tree, url: String) -> Result<Vec<Cap>> {
 	info!(%url, "fetching CAP feed");
@@ -69,9 +58,10 @@ pub async fn fetch_feed(cache: Tree, url: String) -> Result<Vec<Cap>> {
 	trace!(%url, ?new, "new items");
 
 	debug!(%url, "fetching CAPs for new items");
-	let caps = try_join_all(new.into_iter().map(move |item|
-		tokio::spawn(async move { fetch_cap(item).await })
-	))
+	let caps = try_join_all(
+		new.into_iter()
+			.map(move |item| tokio::spawn(async move { fetch_cap(item).await })),
+	)
 	.await?
 	.into_iter()
 	.collect::<Result<_, _>>()?;
@@ -98,7 +88,7 @@ struct Channel {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
-struct Item {
+pub struct Item {
 	pub title: String,
 	pub guid: String,
 	pub category: String,

@@ -1,25 +1,13 @@
-use std::{
-	collections::{HashMap, HashSet},
-	env::var,
-	hash::{Hash, Hasher},
-	mem::take,
-	num::ParseFloatError,
-	path::PathBuf,
-	str::FromStr,
-};
+use std::{collections::HashSet, env::var, path::PathBuf};
 
-use chrono::{DateTime, Utc};
-use color_eyre::eyre::{eyre, Result};
+use color_eyre::eyre::Result;
 use futures::future::try_join_all;
-use geo::{Coordinate, CoordNum, LineString, Polygon};
-use serde::{Deserialize, Deserializer};
-use sled::Tree;
 use structopt::StructOpt;
-use tracing::{debug, error, info, trace};
+use tracing::debug;
 
+mod bound;
 mod cap;
 mod feed;
-mod bound;
 
 #[derive(Clone, Debug, StructOpt)]
 struct Args {
@@ -85,11 +73,18 @@ async fn main() -> Result<()> {
 	// parse local geojson of areas we care about
 
 	let mut bounds = Vec::with_capacity(1);
-	for entry in glob::glob(args.boundaries.join("*.geojson").display().to_string().as_str())? {
+	for entry in glob::glob(
+		args.boundaries
+			.join("*.geojson")
+			.display()
+			.to_string()
+			.as_str(),
+	)? {
 		bounds.push(tokio::spawn(async { bound::read_geojson(entry?).await }));
 	}
 
-	let bounds = try_join_all(bounds).await?
+	let _bounds = try_join_all(bounds)
+		.await?
 		.into_iter()
 		.collect::<Result<Vec<_>, _>>()?
 		.into_iter()

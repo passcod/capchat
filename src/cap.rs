@@ -1,21 +1,17 @@
 use std::{
-	collections::{HashMap, HashSet},
-	env::var,
+	collections::HashMap,
 	hash::{Hash, Hasher},
-	mem::take,
 	num::ParseFloatError,
-	path::PathBuf,
 	str::FromStr,
 };
 
 use chrono::{DateTime, Utc};
 use color_eyre::eyre::{eyre, Result};
-use futures::future::try_join_all;
-use geo::{Coordinate, CoordNum, LineString, Polygon};
+use geo::{CoordNum, Coordinate, LineString, Polygon};
 use serde::{Deserialize, Deserializer};
-use sled::Tree;
-use structopt::StructOpt;
 use tracing::{debug, error, info, trace};
+
+use crate::feed::Item;
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct Cap {
@@ -85,7 +81,7 @@ pub struct Area {
 
 fn parameters_de<'de, D>(deserializer: D) -> Result<HashMap<String, String>, D::Error>
 where
-    D: Deserializer<'de>,
+	D: Deserializer<'de>,
 {
 	#[derive(Deserialize)]
 	struct Parameter {
@@ -94,7 +90,7 @@ where
 		value: String,
 	}
 
-    let params = Vec::<Parameter>::deserialize(deserializer)?;
+	let params = Vec::<Parameter>::deserialize(deserializer)?;
 	let mut map = HashMap::new();
 	for param in params {
 		map.insert(param.name, param.value);
@@ -105,28 +101,36 @@ where
 fn polygons_de<'de, T, D>(deserializer: D) -> Result<Vec<Polygon<T>>, D::Error>
 where
 	T: CoordNum + FromStr<Err = ParseFloatError>,
-    D: Deserializer<'de>,
+	D: Deserializer<'de>,
 {
-    let texts = Vec::<String>::deserialize(deserializer)?;
+	let texts = Vec::<String>::deserialize(deserializer)?;
 	trace!("parsing {} polygons", texts.len());
-	texts.into_iter().map(polygon::<'de, T, D>).collect::<Result<_, _>>()
+	texts
+		.into_iter()
+		.map(polygon::<'de, T, D>)
+		.collect::<Result<_, _>>()
 }
 
 fn polygon<'de, T, D>(text: String) -> Result<Polygon<T>, D::Error>
 where
 	T: CoordNum + FromStr<Err = ParseFloatError>,
-    D: Deserializer<'de>,
+	D: Deserializer<'de>,
 {
 	use serde::de::Error;
 
 	trace!(%text, "parsing polygon");
 
-	let coords = text.split_whitespace().map(|s| {
-		let (x, y) = s.split_once(',').ok_or(Error::custom("invalid coordinate pair"))?;
-		let x = x.parse::<T>().map_err(Error::custom)?;
-		let y = y.parse::<T>().map_err(Error::custom)?;
-		Ok(Coordinate { x, y })
-	}).collect::<Result<Vec<_>, D::Error>>()?;
+	let coords = text
+		.split_whitespace()
+		.map(|s| {
+			let (x, y) = s
+				.split_once(',')
+				.ok_or(Error::custom("invalid coordinate pair"))?;
+			let x = x.parse::<T>().map_err(Error::custom)?;
+			let y = y.parse::<T>().map_err(Error::custom)?;
+			Ok(Coordinate { x, y })
+		})
+		.collect::<Result<Vec<_>, D::Error>>()?;
 	trace!(?coords, "parsed bunch of coordinates");
 
 	let line = LineString(coords);
