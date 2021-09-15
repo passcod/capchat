@@ -158,7 +158,7 @@ where
 	let coords = text
 		.split_whitespace()
 		.map(|s| {
-			let (x, y) = s
+			let (y, x) = s
 				.split_once(',')
 				.ok_or(Error::custom("invalid coordinate pair"))?;
 			let x = x.parse::<T>().map_err(Error::custom)?;
