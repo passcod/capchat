@@ -9,6 +9,8 @@ use tracing::{debug, info};
 
 use output::OutputFormat;
 
+use crate::output::Out;
+
 mod cap;
 mod feed;
 mod geodirs;
@@ -49,11 +51,19 @@ pub struct Args {
 	#[structopt(long, default_value = "_cache")]
 	cache_db: PathBuf,
 
-	/// Type of output to send to chatrooms (`json`, `text`, `map`).
-	///
-	/// If `json`, options related to output are ignored and the JSON is only printed to STDOUT.
-	#[structopt(long, default_value = "map")]
+	/// Type of output to send to chatrooms (`json`, `text`, `text+map`).
+	#[structopt(long, default_value = "text+map")]
 	format: OutputFormat,
+
+	/// Print text output to STDOUT.
+	#[structopt(long)]
+	print: bool,
+
+	/// Write output to file.
+	///
+	/// The message will go to `PATH.txt`, and if there's an image it will go to `PATH.png`.
+	#[structopt(long)]
+	file: Option<PathBuf>,
 
 	/// Height of image in pixels for `map` output format.
 	#[structopt(long, default_value = "300")]
@@ -62,12 +72,6 @@ pub struct Args {
 	/// Width of image in pixels for `map` output format.
 	#[structopt(long, default_value = "400")]
 	image_width: u64,
-
-	/// Write output to file.
-	///
-	/// The message will go to `PATH.txt`, and if there's an image it will go to `PATH.png`.
-	#[structopt(long)]
-	file: Option<PathBuf>,
 
 	/// Facebook Workplace token.
 	///
@@ -153,18 +157,22 @@ async fn main() -> Result<()> {
 	info!("formatting for output");
 	let out = match args.format {
 		OutputFormat::Json => {
-			serde_json::to_writer(std::io::stdout(), &caps)?;
-			return Ok(());
+			Out {
+				message: serde_json::to_string(&caps)?,
+				..Out::default()
+			}
 		}
 		OutputFormat::Text => {
-			let out = output::text(caps)?;
-			println!("{}", &out.message);
-			out
+			output::text(caps)?
 		}
 		OutputFormat::Map => {
-			output::image_with_map(caps, &args)?
+			output::text_with_map(caps, &args)?
 		}
 	};
+
+	if args.print {
+		println!("{}", &out.message);
+	}
 
 	if let Some(path) = args.file {
 		let mut txt = path.clone();

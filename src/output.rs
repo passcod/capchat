@@ -4,7 +4,7 @@ use color_eyre::eyre::Result;
 use itertools::Itertools;
 use tracing::debug;
 
-pub use map::image_with_map;
+pub use map::text_with_map;
 pub use text::text;
 
 mod map;
