@@ -137,7 +137,7 @@ async fn main() -> Result<()> {
 		}
 		Output::Text => {
 			let out = output::text(caps)?;
-			println!("{}", out.message);
+			println!("{}", &out.message);
 			out
 		},
 		Output::Image => output::image(caps)?,
