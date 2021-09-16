@@ -52,9 +52,9 @@ pub async fn fetch_feed(cache: Tree, url: String) -> Result<Vec<Cap>> {
 
 		if cache
 			.compare_and_swap(
-				item.guid.as_bytes().clone(),
+				item.guid.as_bytes().to_owned(),
 				None::<Vec<u8>>,
-				Some(item.link.as_bytes().clone()),
+				Some(item.link.as_bytes().to_owned()),
 			)?
 			.is_err()
 		{
