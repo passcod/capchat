@@ -12,7 +12,7 @@ Sends CAP (Weather, etc) Warnings to Chat.
 |`--boundaries`|Path to a folder container GeoJSON files with polygons that demarcate areas you care about|Working directory|
 |`--cache-db`|Path to the cache database (used to avoid double-posting)|`_cache` folder in workdir|
 |`--fb-workplace-token`|Facebook Workplace token (must have _Message Any Member_ and _Group Chat Bot_ permissions)||
-|`--fb-workplace-group`|Facebook Workplace Group ID to post in||
+|`--fb-workplace-thread`|Facebook Workplace Thread ID to post in||
 
 Note that if you provide no boundary GeoJSON files, all alerts will be filtered out (making this tool rather useless).
 

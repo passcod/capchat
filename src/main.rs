@@ -12,6 +12,7 @@ mod bound;
 mod cap;
 mod feed;
 mod output;
+mod workplace;
 
 #[derive(Clone, Debug, StructOpt)]
 struct Args {
@@ -37,10 +38,10 @@ struct Args {
 	output: Output,
 
 	#[structopt(long)]
-	workplace_token: Option<String>,
+	fb_workplace_token: Option<String>,
 
 	#[structopt(long)]
-	workplace_group: Option<String>,
+	fb_workplace_thread: Option<String>,
 }
 
 #[tokio::main]
@@ -128,7 +129,8 @@ async fn main() -> Result<()> {
 	caps.retain(|cap| cap.info.severity >= args.severity);
 	info!(caps=%caps.len(), severity=?args.severity, "filtered caps against severity");
 
-	let _output = match args.output {
+	info!("formatting for output");
+	let out = match args.output {
 		Output::Json => {
 			serde_json::to_writer(std::io::stdout(), &caps)?;
 			return Ok(());
@@ -142,7 +144,12 @@ async fn main() -> Result<()> {
 		Output::ImageMap => output::image_with_map(caps)?,
 	};
 
-	// make call to chat apis
+	if let (Some(token), Some(thread)) = (&args.fb_workplace_token, &args.fb_workplace_thread) {
+		info!(%thread, "sending to workplace");
+		workplace::send(token, thread, &out).await?;
+		debug!(%thread, "sent to workplace");
+	}
 
+	info!("all done");
 	Ok(())
 }
