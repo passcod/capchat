@@ -22,6 +22,8 @@ You can make your own boundary GeoJSONs with https://geoman.io/geojson-editor.
 |Option|Description|
 |:-----|:----------|
 |`--file`|Write to file. The message will go to `PATH.txt`, and if there's an image it will go to `PATH.png`.|
+|`--image-height`|Height of image in pixels for `image` and `map` output formats.|
+|`--image-width`|Width of image in pixels for `image` and `map` output formats.|
 |`--fb-workplace-token`|Facebook Workplace token (must have _Message Any Member_ and _Group Chat Bot_ permissions).||
 |`--fb-workplace-thread`|Facebook Workplace Thread ID to post in. Cannot be a single user chat.||
 
