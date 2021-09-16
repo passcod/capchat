@@ -33,7 +33,7 @@ serde = { version = "1.0.125", features = ["derive"] }
 serde-xml-rs = "0.4.1"
 serde_json = "1.0.64"
 sled = "0.34.6"
-structopt = "0.3.21"
+structopt = { version = "0.3.23", features = ["color", "wrap_help"] }
 tokio = { version = "1.5.0", features = ["full"] }
 tracing = "0.1.25"
 tracing-subscriber = "0.2.17"

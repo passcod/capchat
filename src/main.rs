@@ -17,42 +17,67 @@ mod workplace;
 
 #[derive(Clone, Debug, StructOpt)]
 struct Args {
+	/// Increase logging verbosity (up to `-vvv`).
+	///
+	/// - `-v`: debug logs
+	/// - `-vv`: trace logs just for this crate
+	/// - `-vvv`: trace logs for everything (extremely chatty!)
 	#[structopt(short, parse(from_occurrences))]
 	verbose: u8,
 
+	/// Suppress all logging output.
 	#[structopt(short, long)]
 	quiet: bool,
 
+	/// URL(s) for the Atom/RSS feed to CAP alerts.
 	#[structopt(long)]
 	cap: Vec<String>,
 
+	/// Minimum severity to get alerts for.
 	#[structopt(long, default_value = "Minor")]
 	severity: cap::Severity,
 
+	/// Path to a folder container GeoJSON files with polygons that demarcate areas you care about.
 	#[structopt(long, default_value = "_boundaries")]
 	boundaries: PathBuf,
 
+	/// Path to a folder container GeoJSON files with polygons for outlines of countries or areas, to render basemaps.
 	#[structopt(long, default_value = "_outlines")]
 	outlines: PathBuf,
 
+	/// Path to the cache database (used to avoid double-posting).
 	#[structopt(long, default_value = "_cache")]
 	cache_db: PathBuf,
 
+	/// Type of output to send to chatrooms (`json`, `text`, `image`, `map`).
+	///
+	/// If `json`, options related to output are ignored and the JSON is only printed to STDOUT.
 	#[structopt(long, default_value = "map")]
 	format: OutputFormat,
 
-	#[structopt(long, default_value = "400")]
-	image_width: u64,
-
+	/// Height of image in pixels for `image` and `map` output formats.
 	#[structopt(long, default_value = "300")]
 	image_height: u64,
 
+	/// Width of image in pixels for `image` and `map` output formats.
+	#[structopt(long, default_value = "400")]
+	image_width: u64,
+
+	/// Write output to file.
+	///
+	/// The message will go to `PATH.txt`, and if there's an image it will go to `PATH.png`.
 	#[structopt(long)]
 	file: Option<PathBuf>,
 
+	/// Facebook Workplace token.
+	///
+	/// It must have _Message Any Member_ and _Group Chat Bot_ permissions.
 	#[structopt(long)]
 	fb_workplace_token: Option<String>,
 
+	/// Facebook Workplace Thread ID to post in.
+	///
+	/// This cannot be a single user chat, and the bot must already be in the group/thread.
 	#[structopt(long)]
 	fb_workplace_thread: Option<String>,
 }
