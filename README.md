@@ -2,10 +2,10 @@
 
 Sends CAP (Weather, etc) Warnings to Chat.
 
-## Args
+## Options
 
-|Arg|Description|Default|
-|:--|:----------|------:|
+|Option|Description|Default|
+|:-----|:----------|------:|
 |`--cap`|URL for the Atom/RSS feed to CAP alerts (can have multiple)|**required**|
 |`--output`|Type of output to send to chatrooms (`json`, `text`, `image`, `map`); if `json` chat arguments are ignored and output is only printed to screen.|`map`|
 |`--severity`|Minimum severity to get alerts for|Minor|
@@ -15,6 +15,15 @@ Sends CAP (Weather, etc) Warnings to Chat.
 |`--fb-workplace-group`|Facebook Workplace Group ID to post in||
 
 Note that if you provide no boundary GeoJSON files, all alerts will be filtered out (making this tool rather useless).
+
+## Logs
+
+By default, moderate (info) logs are printed to STDERR.
+To increase verbosity, use `-v`, `-vv`, or `-vvv`.
+To decrease verbosity, use `-q`.
+
+Additionally, and overriding any of these options, the `RUST_LOG` environment variable is respected.
+See [tracing-subscriber](https://docs.rs/tracing-subscriber/*/tracing_subscriber/filter/struct.EnvFilter.html) for syntax.
 
 ## CAP list
 

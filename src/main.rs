@@ -18,6 +18,9 @@ struct Args {
 	#[structopt(short, parse(from_occurrences))]
 	verbose: u8,
 
+	#[structopt(short, long)]
+	quiet: bool,
+
 	#[structopt(long)]
 	cap: Vec<String>,
 
@@ -45,20 +48,25 @@ async fn main() -> Result<()> {
 	color_eyre::install()?;
 
 	if var("RUST_LOG").is_ok() {
-		tracing_subscriber::fmt::init();
+		tracing_subscriber::fmt()
+			.with_writer(std::io::stderr)
+			.init();
 	}
 
 	let args = Args::from_args();
 
-	tracing_subscriber::fmt()
-		.with_env_filter(match args.verbose {
-			0 => "capchat=info",
-			1 => "capchat=debug",
-			2 => "capchat=trace",
-			3.. => "trace",
-		})
-		.try_init()
-		.ok();
+	if !args.quiet {
+		tracing_subscriber::fmt()
+			.with_writer(std::io::stderr)
+			.with_env_filter(match args.verbose {
+				0 => "capchat=info",
+				1 => "capchat=debug",
+				2 => "capchat=trace",
+				3.. => "trace",
+			})
+			.try_init()
+			.ok();
+	}
 
 	debug!(?args, "parsed arguments");
 
