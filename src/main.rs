@@ -72,7 +72,7 @@ async fn main() -> Result<()> {
 
 	debug!(path=?args.cache_db, "opening sled database");
 	let db = sled::open(&args.cache_db)?;
-	// db.drop_tree("cache")?; // DEV
+	db.drop_tree("cache")?; // DEV
 	let cache = db.open_tree("cache")?;
 
 	let mut caps = try_join_all(args.cap.iter().cloned().map(move |url| {
@@ -133,12 +133,15 @@ async fn main() -> Result<()> {
 			serde_json::to_writer(std::io::stdout(), &caps)?;
 			return Ok(());
 		}
-		Output::Text => output::text(caps)?,
+		Output::Text => {
+			let out = output::text(caps)?;
+			println!("{}", out.message);
+			out
+		},
 		Output::Image => output::image(caps)?,
 		Output::ImageMap => output::image_with_map(caps)?,
 	};
 
-	// display to console
 	// make call to chat apis
 
 	Ok(())
