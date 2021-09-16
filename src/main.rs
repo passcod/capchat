@@ -38,6 +38,12 @@ struct Args {
 	#[structopt(long, default_value = "map")]
 	format: OutputFormat,
 
+	#[structopt(long, default_value = "400")]
+	image_width: u64,
+
+	#[structopt(long, default_value = "300")]
+	image_height: u64,
+
 	#[structopt(long)]
 	file: Option<PathBuf>,
 
@@ -144,8 +150,8 @@ async fn main() -> Result<()> {
 			println!("{}", &out.message);
 			out
 		}
-		OutputFormat::Image => output::image(caps)?,
-		OutputFormat::ImageMap => output::image_with_map(caps)?,
+		OutputFormat::Image => output::image(caps, args.image_width, args.image_height)?,
+		OutputFormat::ImageMap => output::image_with_map(caps, args.image_width, args.image_height)?,
 	};
 
 	if let Some(path) = args.file {
