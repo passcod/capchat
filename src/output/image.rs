@@ -3,10 +3,10 @@ use std::collections::HashSet;
 use color_eyre::eyre::Result;
 use itertools::Itertools;
 
-use crate::cap::Cap;
 use super::{colour_code_emoji, Out};
+use crate::cap::Cap;
 
-pub fn image(caps: HashSet<Cap>, w: u64, h: u64) -> Result<Out> {
+pub fn image(caps: HashSet<Cap>, _w: u64, _h: u64) -> Result<Out> {
 	let mut message = String::with_capacity(caps.len() * 512);
 
 	let headlines = caps

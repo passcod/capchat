@@ -3,8 +3,8 @@ use std::collections::HashSet;
 use color_eyre::eyre::Result;
 use itertools::Itertools;
 
+use super::{colour_code_emoji, Out};
 use crate::cap::Cap;
-use super::{Out, colour_code_emoji};
 
 pub fn text(caps: HashSet<Cap>) -> Result<Out> {
 	let mut message = String::with_capacity(caps.len() * 512);

@@ -2,7 +2,7 @@ use std::{collections::HashSet, env::var, path::PathBuf};
 
 use color_eyre::eyre::Result;
 use futures::future::try_join_all;
-use geo::prelude::Intersects;
+use geo::intersects::Intersects;
 use structopt::StructOpt;
 use tokio::{fs::File, io::AsyncWriteExt};
 use tracing::{debug, info};
@@ -12,6 +12,7 @@ use output::OutputFormat;
 mod bound;
 mod cap;
 mod feed;
+mod geodirs;
 mod output;
 mod workplace;
 
@@ -133,36 +134,19 @@ async fn main() -> Result<()> {
 	}
 
 	info!("loading geojson boundaries");
-
-	let mut bounds = Vec::with_capacity(1);
-	for entry in glob::glob(
-		args.boundaries
-			.join("*.geojson")
-			.display()
-			.to_string()
-			.as_str(),
-	)? {
-		bounds.push(tokio::spawn(async { bound::read_geojson(entry?).await }));
+	let bounds = bound::load(&args.boundaries).await?;
+	if !bounds.is_empty() {
+		info!(boundaries=%bounds.len(), "checking intersections");
+		caps.retain(|cap| {
+			cap.info
+				.areas
+				.iter()
+				.map(|a| &a.polygons)
+				.flatten()
+				.any(|p| bounds.iter().any(|b| b.intersects(p)))
+		});
+		info!(caps=%caps.len(), "filtered caps against boundaries");
 	}
-
-	let bounds = try_join_all(bounds)
-		.await?
-		.into_iter()
-		.collect::<Result<Vec<_>, _>>()?
-		.into_iter()
-		.flatten()
-		.collect::<Vec<_>>();
-
-	info!(boundaries=%bounds.len(), "checking intersections");
-	caps.retain(|cap| {
-		cap.info
-			.areas
-			.iter()
-			.map(|a| &a.polygons)
-			.flatten()
-			.any(|p| bounds.iter().any(|b| b.intersects(p)))
-	});
-	info!(caps=%caps.len(), "filtered caps against boundaries");
 
 	caps.retain(|cap| cap.info.severity >= args.severity);
 	info!(caps=%caps.len(), severity=?args.severity, "filtered caps against severity");
@@ -179,7 +163,9 @@ async fn main() -> Result<()> {
 			out
 		}
 		OutputFormat::Image => output::image(caps, args.image_width, args.image_height)?,
-		OutputFormat::ImageMap => output::image_with_map(caps, args.image_width, args.image_height)?,
+		OutputFormat::ImageMap => {
+			output::image_with_map(caps, args.image_width, args.image_height)?
+		}
 	};
 
 	if let Some(path) = args.file {

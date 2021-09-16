@@ -4,13 +4,13 @@ use color_eyre::eyre::Result;
 use itertools::Itertools;
 use tracing::debug;
 
-pub use text::text;
 pub use image::image;
 pub use map::image_with_map;
+pub use text::text;
 
-mod text;
 mod image;
 mod map;
+mod text;
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct Out {
@@ -39,7 +39,6 @@ impl FromStr for OutputFormat {
 		}
 	}
 }
-
 
 pub fn colour_code_emoji(c: &str) -> Option<char> {
 	match c.to_lowercase().as_str() {
