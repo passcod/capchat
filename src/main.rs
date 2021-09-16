@@ -4,9 +4,10 @@ use color_eyre::eyre::Result;
 use futures::future::try_join_all;
 use geo::prelude::Intersects;
 use structopt::StructOpt;
+use tokio::{fs::File, io::AsyncWriteExt};
 use tracing::{debug, info};
 
-use output::Output;
+use output::OutputFormat;
 
 mod bound;
 mod cap;
@@ -35,7 +36,10 @@ struct Args {
 	cache_db: PathBuf,
 
 	#[structopt(long, default_value = "map")]
-	output: Output,
+	format: OutputFormat,
+
+	#[structopt(long)]
+	file: Option<PathBuf>,
 
 	#[structopt(long)]
 	fb_workplace_token: Option<String>,
@@ -130,19 +134,36 @@ async fn main() -> Result<()> {
 	info!(caps=%caps.len(), severity=?args.severity, "filtered caps against severity");
 
 	info!("formatting for output");
-	let out = match args.output {
-		Output::Json => {
+	let out = match args.format {
+		OutputFormat::Json => {
 			serde_json::to_writer(std::io::stdout(), &caps)?;
 			return Ok(());
 		}
-		Output::Text => {
+		OutputFormat::Text => {
 			let out = output::text(caps)?;
 			println!("{}", &out.message);
 			out
-		},
-		Output::Image => output::image(caps)?,
-		Output::ImageMap => output::image_with_map(caps)?,
+		}
+		OutputFormat::Image => output::image(caps)?,
+		OutputFormat::ImageMap => output::image_with_map(caps)?,
 	};
+
+	if let Some(path) = args.file {
+		let mut txt = path.clone();
+		txt.set_extension("txt");
+		info!(path=?txt, "writing output message");
+		File::create(txt)
+			.await?
+			.write_all(out.message.as_bytes())
+			.await?;
+
+		if let Some(ref bytes) = out.image {
+			let mut img = path.clone();
+			img.set_extension("png");
+			info!(path=?img, "writing output image");
+			File::create(img).await?.write_all(bytes).await?;
+		}
+	}
 
 	if let (Some(token), Some(thread)) = (&args.fb_workplace_token, &args.fb_workplace_thread) {
 		info!(%thread, "sending to workplace");

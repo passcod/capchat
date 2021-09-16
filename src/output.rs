@@ -15,24 +15,40 @@ pub fn text(caps: HashSet<Cap>) -> Result<Out> {
 		.group_by(|c| &c.info.headline);
 
 	for (headline, caps) in &headlines {
-		message.extend(format!(
-			"{}\n\n{}\n",
-			headline.to_uppercase(),
-			caps.map(|c| {
-				format!(
-					"{} [{}]  {} hours from {} to {}\n\n{}\n\n",
-					c.info.parameters.get("ColourCode").and_then(|c| colour_code_emoji(c.as_str())).unwrap_or(' '),
-					c.info.areas.iter().map(|a| &a.desc).join(", "),
-					c.info.expires.signed_duration_since(c.info.onset).num_hours(),
-					c.info.onset.format("%_I:%M%P %A"),
-					c.info.expires.format("%_I:%M%P %A"),
-					c.info.description,
-				).trim_start().to_string()
-			}).join("\n\n")
-		).chars());
+		message.extend(
+			format!(
+				"{}\n\n{}\n",
+				headline.to_uppercase(),
+				caps.map(|c| {
+					format!(
+						"{} [{}]  {} hours from {} to {}\n\n{}\n\n",
+						c.info
+							.parameters
+							.get("ColourCode")
+							.and_then(|c| colour_code_emoji(c.as_str()))
+							.unwrap_or(' '),
+						c.info.areas.iter().map(|a| &a.desc).join(", "),
+						c.info
+							.expires
+							.signed_duration_since(c.info.onset)
+							.num_hours(),
+						c.info.onset.format("%_I:%M%P %A"),
+						c.info.expires.format("%_I:%M%P %A"),
+						c.info.description,
+					)
+					.trim_start()
+					.to_string()
+				})
+				.join("\n\n")
+			)
+			.chars(),
+		);
 	}
 
-	Ok(Out { message: message.trim().into(), image: None })
+	Ok(Out {
+		message: message.trim().into(),
+		image: None,
+	})
 }
 
 pub fn image(_caps: HashSet<Cap>) -> Result<Out> {
@@ -69,14 +85,16 @@ pub fn split_long_message(out: Out, max_len: usize, min_len: usize) -> (Out, Opt
 	};
 
 	debug!(%max, "splitting message along whitespace");
-    let mut text = out.message.split(' ').peekable();
+	let mut text = out.message.split(' ').peekable();
 
-    let mut n = 0;
-    let first = text.peeking_take_while(|frag| {
-			    n += frag.chars().count() + 1;
-			    n < max
-		    }).join(" ");
-    let rest = text.join(" ");
+	let mut n = 0;
+	let first = text
+		.peeking_take_while(|frag| {
+			n += frag.chars().count() + 1;
+			n < max
+		})
+		.join(" ");
+	let rest = text.join(" ");
 
 	debug!(
 		max=%max_len,
@@ -86,29 +104,32 @@ pub fn split_long_message(out: Out, max_len: usize, min_len: usize) -> (Out, Opt
 	);
 
 	let mut first_out = out.clone();
-    first_out.message = first;
+	first_out.message = first;
 
-	(first_out, Some(Out {
-		message: rest,
-		..Out::default()
-	}))
+	(
+		first_out,
+		Some(Out {
+			message: rest,
+			..Out::default()
+		}),
+	)
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct Out {
 	pub message: String,
-	pub image: Option<()>, // TODO
+	pub image: Option<Vec<u8>>, // TODO
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Output {
+pub enum OutputFormat {
 	Json,
 	Text,
 	Image,
 	ImageMap,
 }
 
-impl FromStr for Output {
+impl FromStr for OutputFormat {
 	type Err = String;
 
 	fn from_str(s: &str) -> Result<Self, Self::Err> {
