@@ -34,7 +34,7 @@ pub async fn fetch_cap(item: Item) -> Result<Cap> {
 	trace!(%guid, status=?resp.status(), headers=?resp.headers(), "headers");
 
 	let body = resp.text().await?;
-	debug!(%guid, chars=%body.len(), "decoded body as text");
+	debug!(%guid, chars=%body.chars().count(), "decoded body as text");
 	trace!(%guid, body=%body, "decoded body");
 
 	let cap: Cap = serde_xml_rs::from_str(&body)?;

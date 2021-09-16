@@ -1,4 +1,5 @@
 /target
 _cache
 *.geojson
+*.xml
 test-output.*

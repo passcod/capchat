@@ -33,7 +33,7 @@ pub async fn fetch_feed(cache: Tree, url: String) -> Result<Vec<Cap>> {
 	trace!(%url, ?media_type, "decoded media type");
 
 	let body = resp.text().await?;
-	debug!(%url, chars=%body.len(), "decoded body as text");
+	debug!(%url, chars=%body.chars().count(), "decoded body as text");
 	trace!(%url, body=%body, "decoded body");
 
 	let items = match (
