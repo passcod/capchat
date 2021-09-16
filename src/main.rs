@@ -9,7 +9,6 @@ use tracing::{debug, info};
 
 use output::OutputFormat;
 
-mod bound;
 mod cap;
 mod feed;
 mod geodirs;
@@ -134,7 +133,7 @@ async fn main() -> Result<()> {
 	}
 
 	info!("loading geojson boundaries");
-	let bounds = bound::load(&args.boundaries).await?;
+	let bounds = geodirs::load_polygons(&args.boundaries).await?;
 	if !bounds.is_empty() {
 		info!(boundaries=%bounds.len(), "checking intersections");
 		caps.retain(|cap| {

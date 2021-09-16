@@ -10,6 +10,18 @@ use geojson::{quick_collection, GeoJson};
 use tokio::{fs::File, io::AsyncReadExt};
 use tracing::{debug, trace};
 
+pub async fn load_polygons(path: impl AsRef<Path>) -> Result<Vec<Polygon<f64>>> {
+	let path = path.as_ref();
+	let gc = load_geo_dir(&path).await?;
+	debug!(geos=%gc.0.len(), "loaded boundary geometries");
+
+	let polys = only_polys(gc);
+	trace!(?path, ?polys, "filtered to just polygons");
+	debug!(?path, "obtained {} polygons", polys.len());
+
+	Ok(polys)
+}
+
 pub async fn load_geo_dir(path: impl AsRef<Path>) -> Result<GeometryCollection<f64>> {
 	let mut files = Vec::new();
 	for entry in glob::glob(
