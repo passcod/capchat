@@ -29,8 +29,11 @@ struct Args {
 	#[structopt(long, default_value = "Minor")]
 	severity: cap::Severity,
 
-	#[structopt(long, default_value = ".")]
+	#[structopt(long, default_value = "_boundaries")]
 	boundaries: PathBuf,
+
+	#[structopt(long, default_value = "_outlines")]
+	outlines: PathBuf,
 
 	#[structopt(long, default_value = "_cache")]
 	cache_db: PathBuf,

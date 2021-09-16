@@ -1,5 +1,6 @@
 /target
 _cache
-*.geojson
-*.xml
+_boundaries
+/*.geojson
+/*.xml
 test-output.*

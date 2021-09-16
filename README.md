@@ -9,10 +9,13 @@ Sends CAP (Weather, etc) Warnings to Chat.
 |`--cap`|URL for the Atom/RSS feed to CAP alerts (can have multiple)|**required**|
 |`--format`|Type of output to send to chatrooms (`json`, `text`, `image`, `map`); if `json` chat arguments are ignored and output is only printed to screen.|`map`|
 |`--severity`|Minimum severity to get alerts for|Minor|
-|`--boundaries`|Path to a folder container GeoJSON files with polygons that demarcate areas you care about|Working directory|
+|`--boundaries`|Path to a folder container GeoJSON files with polygons that demarcate areas you care about|`_boundaries` folder in workdir|
+|`--outlines`|Path to a folder container GeoJSON files with polygons for outlines of countries or areas, to render basemaps|`_outlines` folder in workdir|
 |`--cache-db`|Path to the cache database (used to avoid double-posting)|`_cache` folder in workdir|
 
-Note that if you provide no boundary GeoJSON files, all alerts will be filtered out (making this tool rather useless).
+You can download outline GeoJSON files from https://geojson-maps.ash.ms/.
+
+You can make your own boundary GeoJSONs with https://geoman.io/geojson-editor.
 
 ## Outputs
 
