@@ -4,11 +4,9 @@ use color_eyre::eyre::Result;
 use itertools::Itertools;
 use tracing::debug;
 
-pub use image::image;
 pub use map::image_with_map;
 pub use text::text;
 
-mod image;
 mod map;
 mod text;
 
@@ -22,8 +20,7 @@ pub struct Out {
 pub enum OutputFormat {
 	Json,
 	Text,
-	Image,
-	ImageMap,
+	Map,
 }
 
 impl FromStr for OutputFormat {
@@ -33,8 +30,7 @@ impl FromStr for OutputFormat {
 		match s.to_lowercase().as_str() {
 			"json" => Ok(Self::Json),
 			"text" => Ok(Self::Text),
-			"image" => Ok(Self::Image),
-			"map" | "image+map" => Ok(Self::ImageMap),
+			"map" | "text+map" => Ok(Self::Map),
 			_ => Err(format!("unknown output type: {}", s)),
 		}
 	}

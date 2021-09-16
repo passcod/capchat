@@ -7,7 +7,7 @@ Sends CAP (Weather, etc) Warnings to Chat.
 |Option|Description|Default|
 |:-----|:----------|------:|
 |`--cap`|URL for the Atom/RSS feed to CAP alerts (can have multiple)|**required**|
-|`--format`|Type of output to send to chatrooms (`json`, `text`, `image`, `map`); if `json` chat arguments are ignored and output is only printed to screen.|`map`|
+|`--format`|Type of output to send to chatrooms (`json`, `text`, `map`); if `json` chat arguments are ignored and output is only printed to screen.|`map`|
 |`--severity`|Minimum severity to get alerts for|Minor|
 |`--boundaries`|Path to a folder container GeoJSON files with polygons that demarcate areas you care about|`_boundaries` folder in workdir|
 |`--outlines`|Path to a folder container GeoJSON files with polygons for outlines of countries or areas, to render basemaps|`_outlines` folder in workdir|
@@ -22,8 +22,8 @@ You can make your own boundary GeoJSONs with https://geoman.io/geojson-editor.
 |Option|Description|
 |:-----|:----------|
 |`--file`|Write to file. The message will go to `PATH.txt`, and if there's an image it will go to `PATH.png`.|
-|`--image-height`|Height of image in pixels for `image` and `map` output formats.|
-|`--image-width`|Width of image in pixels for `image` and `map` output formats.|
+|`--image-height`|Height of image in pixels for `map` output format.|
+|`--image-width`|Width of image in pixels for `map` output format.|
 |`--fb-workplace-token`|Facebook Workplace token (must have _Message Any Member_ and _Group Chat Bot_ permissions).||
 |`--fb-workplace-thread`|Facebook Workplace Thread ID to post in. Cannot be a single user chat.||
 

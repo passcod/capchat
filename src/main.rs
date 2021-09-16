@@ -16,7 +16,7 @@ mod output;
 mod workplace;
 
 #[derive(Clone, Debug, StructOpt)]
-struct Args {
+pub struct Args {
 	/// Increase logging verbosity (up to `-vvv`).
 	///
 	/// - `-v`: debug logs
@@ -49,17 +49,17 @@ struct Args {
 	#[structopt(long, default_value = "_cache")]
 	cache_db: PathBuf,
 
-	/// Type of output to send to chatrooms (`json`, `text`, `image`, `map`).
+	/// Type of output to send to chatrooms (`json`, `text`, `map`).
 	///
 	/// If `json`, options related to output are ignored and the JSON is only printed to STDOUT.
 	#[structopt(long, default_value = "map")]
 	format: OutputFormat,
 
-	/// Height of image in pixels for `image` and `map` output formats.
+	/// Height of image in pixels for `map` output format.
 	#[structopt(long, default_value = "300")]
 	image_height: u64,
 
-	/// Width of image in pixels for `image` and `map` output formats.
+	/// Width of image in pixels for `map` output format.
 	#[structopt(long, default_value = "400")]
 	image_width: u64,
 
@@ -161,9 +161,8 @@ async fn main() -> Result<()> {
 			println!("{}", &out.message);
 			out
 		}
-		OutputFormat::Image => output::image(caps, args.image_width, args.image_height)?,
-		OutputFormat::ImageMap => {
-			output::image_with_map(caps, args.image_width, args.image_height)?
+		OutputFormat::Map => {
+			output::image_with_map(caps, &args)?
 		}
 	};
 
