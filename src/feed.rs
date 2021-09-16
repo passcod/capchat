@@ -42,7 +42,9 @@ pub async fn fetch_feed(cache: Tree, url: String) -> Result<Vec<Cap>> {
 		media_type.suffix().map(|s| s.as_str()),
 	) {
 		(mime::APPLICATION, "atom", Some("xml")) => todo!("atom support"),
-		(mime::APPLICATION, "rss", Some("xml")) => parse_rss(&url, &body)?,
+		(mime::APPLICATION, "rss", Some("xml")) | (mime::APPLICATION, "xml", None) => {
+			parse_rss(&url, &body)?
+		}
 		_ => return Err(eyre!("unsupported media type: {}", media_type)),
 	};
 
