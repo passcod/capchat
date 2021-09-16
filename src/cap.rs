@@ -188,7 +188,7 @@ where
 		.map(|s| {
 			let (y, x) = s
 				.split_once(',')
-				.ok_or(Error::custom("invalid coordinate pair"))?;
+				.ok_or_else(|| Error::custom("invalid coordinate pair"))?;
 			let x = x.parse::<T>().map_err(Error::custom)?;
 			let y = y.parse::<T>().map_err(Error::custom)?;
 			Ok(Coordinate { x, y })
@@ -205,12 +205,12 @@ where
 	Ok(Polygon::new(line, Vec::new()))
 }
 
-fn polygons_ser<S, T>(polys: &Vec<Polygon<T>>, serializer: S) -> Result<S::Ok, S::Error>
+fn polygons_ser<S, T>(polys: &[Polygon<T>], serializer: S) -> Result<S::Ok, S::Error>
 where
 	S: Serializer,
 	T: CoordNum + CoordFloat,
 {
-	let gc = GeometryCollection::<T>::from_iter(polys.clone());
+	let gc = GeometryCollection::<T>::from_iter(polys.to_owned());
 	let fc = FeatureCollection::from(&gc);
 	let geojson = GeoJson::FeatureCollection(fc);
 	geojson.serialize(serializer)

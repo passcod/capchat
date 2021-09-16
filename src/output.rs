@@ -20,7 +20,7 @@ pub fn text(caps: HashSet<Cap>) -> Result<Out> {
 			caps.map(|c| {
 				format!(
 					"{} [{}]  {} hours from {} to {}\n\n{}\n\n",
-					c.info.parameters.get("ColourCode").and_then(colour_code_emoji).unwrap_or(' '),
+					c.info.parameters.get("ColourCode").and_then(|c| colour_code_emoji(c.as_str())).unwrap_or(' '),
 					c.info.areas.iter().map(|a| &a.desc).join(", "),
 					c.info.expires.signed_duration_since(c.info.onset).num_hours(),
 					c.info.onset.format("%_I:%M%P %A"),
@@ -42,7 +42,7 @@ pub fn image_with_map(_caps: HashSet<Cap>) -> Result<Out> {
 	todo!()
 }
 
-fn colour_code_emoji(c: &String) -> Option<char> {
+fn colour_code_emoji(c: &str) -> Option<char> {
 	match c.to_lowercase().as_str() {
 		"blue" => Some('🔵'),
 		"green" => Some('🟢'),
