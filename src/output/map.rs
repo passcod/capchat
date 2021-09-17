@@ -8,14 +8,12 @@ use geo_booleanop::boolean::BooleanOp;
 use geozero::ToSvg;
 use itertools::Itertools;
 use tiny_skia::Pixmap;
-use tokio::fs::File;
-use tokio::io::AsyncWriteExt;
 use tracing::{debug, trace};
 use usvg::{FitTo, Options, Size, Tree};
 
 use super::{text, Out};
 use crate::cap::Cap;
-use crate::geodirs::{debug_write_geojson, load_polygons};
+use crate::geodirs::load_polygons;
 use crate::Args;
 
 pub async fn text_with_map(caps: HashSet<Cap>, args: &Args) -> Result<Out> {
@@ -50,7 +48,7 @@ pub async fn text_with_map(caps: HashSet<Cap>, args: &Args) -> Result<Out> {
 	}
 
 	#[cfg(debug_assertions)]
-	debug_write_geojson("area", &areas).await?;
+	crate::geodirs::debug_write_geojson("area", &areas).await?;
 
 	let mut mps = vec![Mps {
 		mp: &areas,
@@ -69,7 +67,7 @@ pub async fn text_with_map(caps: HashSet<Cap>, args: &Args) -> Result<Out> {
 		}
 
 		#[cfg(debug_assertions)]
-		debug_write_geojson("outline", &outlines).await?;
+		crate::geodirs::debug_write_geojson("outline", &outlines).await?;
 
 		mps.insert(
 			0,
@@ -88,10 +86,7 @@ pub async fn text_with_map(caps: HashSet<Cap>, args: &Args) -> Result<Out> {
 
 	trace!(%svg, "svg string");
 	#[cfg(debug_assertions)]
-	File::create("test-output.svg")
-		.await?
-		.write_all(svg.as_bytes())
-		.await?;
+	debug_file("test-output.svg", svg.as_bytes()).await?;
 
 	debug!("reparsing svg into usvg");
 	let opts = Options {
@@ -178,4 +173,13 @@ fn mps_to_svg(mps: &[Mps], background: &str) -> Result<String> {
 			.collect::<Result<Vec<_>>>()?
 			.join("\n")
 	))
+}
+
+#[cfg(debug_assertions)]
+async fn debug_file(name: &str, data: &[u8]) -> Result<()> {
+	use tokio::{fs::File, io::AsyncWriteExt};
+
+	File::create(name).await?.write_all(data).await?;
+
+	Ok(())
 }

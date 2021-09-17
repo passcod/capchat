@@ -12,10 +12,10 @@ use output::OutputFormat;
 use crate::output::Out;
 
 mod cap;
+mod facebook;
 mod feed;
 mod geodirs;
 mod output;
-mod facebook;
 
 #[derive(Clone, Debug, StructOpt)]
 pub struct Args {
