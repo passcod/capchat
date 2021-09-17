@@ -5,7 +5,7 @@ use futures::future::try_join_all;
 use mime::Mime;
 use serde::Deserialize;
 use sled::Tree;
-use tracing::{debug, info, trace};
+use tracing::{debug, info, trace, warn};
 
 use crate::cap::{fetch_cap, Cap};
 
@@ -44,8 +44,15 @@ pub async fn fetch_feed(cache: Tree, url: String) -> Result<Vec<Cap>> {
 		(mime::APPLICATION, "atom", Some("xml")) => {
 			parse_atom(&url, &body)?
 		},
-		(mime::APPLICATION, "rss", Some("xml")) | (mime::APPLICATION, "xml", None) => {
+		(mime::APPLICATION, "rss", Some("xml")) => {
 			parse_rss(&url, &body)?
+		}
+		(mime::APPLICATION, "xml", None) => {
+			warn!(%url, ?media_type, "ambiguous media type, trying rss");
+			parse_rss(&url, &body).or_else(|err| {
+				warn!(%url, %err, "failed to parse as rss, trying atom");
+				parse_atom(&url, &body)
+			})?
 		}
 		_ => return Err(eyre!("unsupported media type: {}", media_type)),
 	};
