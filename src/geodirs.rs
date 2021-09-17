@@ -5,12 +5,15 @@ use std::{
 
 use color_eyre::eyre::Result;
 use futures::future::try_join_all;
-use geo::{Geometry, GeometryCollection, Polygon};
-use geojson::{quick_collection, GeoJson};
-use tokio::{fs::File, io::AsyncReadExt};
-use tracing::{debug, trace};
+use geo::{Geometry, GeometryCollection, MultiPolygon, Polygon};
+use geojson::{quick_collection, FeatureCollection, GeoJson};
+use tokio::{
+	fs::File,
+	io::{AsyncReadExt, AsyncWriteExt},
+};
+use tracing::{debug, trace, warn};
 
-pub async fn load_polygons(path: impl AsRef<Path>) -> Result<Vec<Polygon<f64>>> {
+pub async fn load_polygons(path: impl AsRef<Path>) -> Result<MultiPolygon<f64>> {
 	let path = path.as_ref();
 	let gc = load_geo_dir(&path).await?;
 	debug!(geos=%gc.0.len(), "loaded boundary geometries");
@@ -19,7 +22,7 @@ pub async fn load_polygons(path: impl AsRef<Path>) -> Result<Vec<Polygon<f64>>> 
 	trace!(?path, ?polys, "filtered to just polygons");
 	debug!(?path, "obtained {} polygons", polys.len());
 
-	Ok(polys)
+	Ok(MultiPolygon(polys))
 }
 
 pub async fn load_geo_dir(path: impl AsRef<Path>) -> Result<GeometryCollection<f64>> {
@@ -46,7 +49,18 @@ pub async fn load_geo_dir(path: impl AsRef<Path>) -> Result<GeometryCollection<f
 	Ok(GeometryCollection(gs))
 }
 
-pub async fn load_geojson(path: PathBuf) -> Result<GeometryCollection<f64>> {
+pub async fn debug_write_geojson(name: &str, polys: &MultiPolygon<f64>) -> Result<()> {
+	warn!(%name, "writing debug geojson");
+	let gc = GeometryCollection::from(polys.clone());
+	let gj = GeoJson::FeatureCollection(FeatureCollection::from(&gc)).to_string();
+	File::create(format!("test-output.{}.geojson", name))
+		.await?
+		.write_all(gj.as_bytes())
+		.await?;
+	Ok(())
+}
+
+async fn load_geojson(path: PathBuf) -> Result<GeometryCollection<f64>> {
 	debug!(?path, "reading geojson");
 
 	let mut file = File::open(&path).await?;

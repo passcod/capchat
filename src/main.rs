@@ -65,13 +65,13 @@ pub struct Args {
 	#[structopt(long)]
 	file: Option<PathBuf>,
 
-	/// Height of image in pixels for `map` output format.
-	#[structopt(long, default_value = "300")]
-	image_height: u64,
+	/// Maximum height of image in pixels for `map` output format.
+	#[structopt(long, default_value = "512")]
+	image_height: u32,
 
-	/// Width of image in pixels for `map` output format.
-	#[structopt(long, default_value = "400")]
-	image_width: u64,
+	/// Maximum width of image in pixels for `map` output format.
+	#[structopt(long, default_value = "512")]
+	image_width: u32,
 
 	/// Facebook Workplace token.
 	///
@@ -138,15 +138,15 @@ async fn main() -> Result<()> {
 
 	info!("loading geojson boundaries");
 	let bounds = geodirs::load_polygons(&args.boundaries).await?;
-	if !bounds.is_empty() {
-		info!(boundaries=%bounds.len(), "checking intersections");
+	if !bounds.0.is_empty() {
+		info!(boundaries=%bounds.0.len(), "checking intersections");
 		caps.retain(|cap| {
 			cap.info
 				.areas
 				.iter()
 				.map(|a| &a.polygons)
 				.flatten()
-				.any(|p| bounds.iter().any(|b| b.intersects(p)))
+				.any(|p| bounds.intersects(p))
 		});
 		info!(caps=%caps.len(), "filtered caps against boundaries");
 	}
@@ -156,18 +156,12 @@ async fn main() -> Result<()> {
 
 	info!("formatting for output");
 	let out = match args.format {
-		OutputFormat::Json => {
-			Out {
-				message: serde_json::to_string(&caps)?,
-				..Out::default()
-			}
-		}
-		OutputFormat::Text => {
-			output::text(caps)?
-		}
-		OutputFormat::Map => {
-			output::text_with_map(caps, &args)?
-		}
+		OutputFormat::Json => Out {
+			message: serde_json::to_string(&caps)?,
+			..Out::default()
+		},
+		OutputFormat::Text => output::text(caps)?,
+		OutputFormat::Map => output::text_with_map(caps, &args).await?,
 	};
 
 	if args.print {

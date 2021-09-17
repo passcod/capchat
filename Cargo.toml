@@ -24,19 +24,25 @@ chrono = { version = "0.4.19", features = ["serde"] }
 color-eyre = "0.5.11"
 futures = "0.3.14"
 geo = "0.18.0"
+geo-booleanop = { git = "https://github.com/21re/rust-geo-booleanop" }
 geojson = { version = "0.22.2", features = ["geo-types"] }
+geozero = "0.7.4"
 glob = "0.3.0"
 itertools = "0.10.1"
 mime = "0.3.16"
 reqwest = { version = "0.11.3", features = ["json", "rustls-tls"], default-features = false }
+resvg = "0.18.0"
 serde = { version = "1.0.125", features = ["derive"] }
 serde-xml-rs = "0.4.1"
 serde_json = "1.0.64"
 sled = "0.34.6"
 structopt = { version = "0.3.23", features = ["color", "wrap_help"] }
+svg = "0.10.0"
+tiny-skia = "0.6.1"
 tokio = { version = "1.5.0", features = ["full"] }
 tracing = "0.1.25"
 tracing-subscriber = "0.2.17"
+usvg = "0.18.0"
 
 [build-dependencies]
 embed-resource = "1.6.1"
