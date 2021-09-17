@@ -119,13 +119,13 @@ struct Rss {
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename = "feed")]
 struct Atom {
-	#[serde(rename = "entry")]
+	#[serde(rename = "entry", default)]
 	pub entries: Vec<AtomEntry>,
 }
 
 #[derive(Clone, Debug, Deserialize)]
 struct Channel {
-	#[serde(rename = "item")]
+	#[serde(rename = "item", default)]
 	pub items: Vec<RssItem>,
 }
 
