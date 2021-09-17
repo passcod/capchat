@@ -15,7 +15,7 @@ mod cap;
 mod feed;
 mod geodirs;
 mod output;
-mod workplace;
+mod facebook;
 
 #[derive(Clone, Debug, StructOpt)]
 pub struct Args {
@@ -77,13 +77,13 @@ pub struct Args {
 	///
 	/// It must have _Message Any Member_ and _Group Chat Bot_ permissions.
 	#[structopt(long)]
-	fb_workplace_token: Option<String>,
+	facebook_token: Option<String>,
 
 	/// Facebook Workplace Thread ID to post in.
 	///
 	/// This cannot be a single user chat, and the bot must already be in the group/thread.
 	#[structopt(long)]
-	fb_workplace_thread: Option<String>,
+	facebook_thread: Option<String>,
 }
 
 #[tokio::main]
@@ -185,9 +185,9 @@ async fn main() -> Result<()> {
 		}
 	}
 
-	if let (Some(token), Some(thread)) = (&args.fb_workplace_token, &args.fb_workplace_thread) {
+	if let (Some(token), Some(thread)) = (&args.facebook_token, &args.facebook_thread) {
 		info!(%thread, "sending to workplace");
-		workplace::send(token, thread, &out).await?;
+		facebook::send(token, thread, &out).await?;
 		debug!(%thread, "sent to workplace");
 	}
 
