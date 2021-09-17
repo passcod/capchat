@@ -1,0 +1,99 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        name:
+          - linux-amd64-gnu
+          - linux-amd64-musl
+          - linux-armhf-gnu
+          - linux-arm64-gnu
+          - mac-x86-64
+          - mac-arm64
+          - windows-x86-64
+        include:
+          - name: linux-amd64-gnu
+            os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            cross: false
+            experimental: false
+
+          - name: linux-amd64-musl
+            os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+            cross: true
+            experimental: false
+
+          - name: linux-armhf-gnu
+            os: ubuntu-latest
+            target: armv7-unknown-linux-gnueabihf
+            cross: true
+            experimental: false
+
+          - name: linux-arm64-gnu
+            os: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+            cross: true
+            experimental: false
+
+          - name: mac-x86-64
+            os: macos-latest
+            target: x86_64-apple-darwin
+            cross: false
+            experimental: false
+
+          - name: mac-arm64
+            os: macos-latest
+            target: aarch64-apple-darwin
+            cross: true
+            experimental: true
+
+          - name: windows-x86-64
+            os: windows-latest
+            target: x86_64-pc-windows-msvc
+            cross: false
+            experimental: false
+
+    name: Binaries for ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.experimental }}
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/cache@v2
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('Cargo.lock') }}
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
+      - uses: actions-rs/cargo@v1
+        name: Build
+        with:
+          use-cross: ${{ matrix.cross }}
+          command: build
+          args: --release --locked --target ${{ matrix.target }}
+      - name: Rename
+        shell: bash
+        run: |
+          set -euxo pipefail
+          ext=""
+          [[ "${{ matrix.name }}" == windows-* ]] && ext=".exe"
+          bin="target/${{ matrix.target }}/release/capchat${ext}"
+          version=$(echo "${{ github.ref }}" | cut -d/ -f3 | cut -dv -f2)
+          dst="capchat_v${version}_${{ matrix.target }}${ext}"
+          strip "$bin" || true
+          mv "$bin" "$dst"
+      - uses: softprops/action-gh-release@v1
+        with:
+          files: capchat_v*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
