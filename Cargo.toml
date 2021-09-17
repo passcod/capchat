@@ -1,6 +1,6 @@
 [package]
 name = "capchat"
-version = "0.3.0"
+version = "0.4.0"
 
 authors = ["Félix Saparelli <felix@passcod.name>"]
 license = "Apache-2.0"
