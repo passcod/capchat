@@ -6,9 +6,9 @@ use std::{
 use color_eyre::eyre::Result;
 use futures::future::try_join_all;
 use geo::{Geometry, GeometryCollection, MultiPolygon, Polygon};
-use geojson::{quick_collection, FeatureCollection, GeoJson};
+use geojson::{quick_collection, GeoJson};
 use tokio::{fs::File, io::AsyncReadExt};
-use tracing::{debug, trace, warn};
+use tracing::{debug, trace};
 
 pub async fn load_polygons(path: impl AsRef<Path>) -> Result<MultiPolygon<f64>> {
 	let path = path.as_ref();
@@ -48,9 +48,10 @@ pub async fn load_geo_dir(path: impl AsRef<Path>) -> Result<GeometryCollection<f
 
 #[cfg(debug_assertions)]
 pub async fn debug_write_geojson(name: &str, polys: &MultiPolygon<f64>) -> Result<()> {
+	use geojson::FeatureCollection;
 	use tokio::io::AsyncWriteExt;
 
-	warn!(%name, "writing debug geojson");
+	tracing::warn!(%name, "writing debug geojson");
 	let gc = GeometryCollection::from(polys.clone());
 	let gj = GeoJson::FeatureCollection(FeatureCollection::from(&gc)).to_string();
 	File::create(format!("test-output.{}.geojson", name))

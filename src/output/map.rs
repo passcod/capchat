@@ -179,6 +179,7 @@ fn mps_to_svg(mps: &[Mps], background: &str) -> Result<String> {
 async fn debug_file(name: &str, data: &[u8]) -> Result<()> {
 	use tokio::{fs::File, io::AsyncWriteExt};
 
+	tracing::warn!(%name, "writing debug file");
 	File::create(name).await?.write_all(data).await?;
 
 	Ok(())
