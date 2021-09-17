@@ -23,6 +23,7 @@ name = "capchat"
 [dependencies]
 chrono = { version = "0.4.19", features = ["serde"] }
 color-eyre = "0.5.11"
+feed-rs = "1.0.0"
 futures = "0.3.14"
 geo = "0.18.0"
 geo-booleanop = { git = "https://github.com/21re/rust-geo-booleanop" }
