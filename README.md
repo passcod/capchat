@@ -25,9 +25,9 @@ You can make your own boundary GeoJSONs with https://geoman.io/geojson-editor.
 |`--file`|Write to file. The message will go to `PATH.txt`, and if there's an image it will go to `PATH.png`.|
 |`--image-height`|Maximum height of image in pixels for `text+map` output format (default 512).|
 |`--image-width`|Maximum width of image in pixels for `text+map` output format (default 512).|
-|`--facebook-token`|Facebook Messenger/Workplace token (must have _Message Any Member_ and _Group Chat Bot_ permissions).||
-|`--facebook-thread`|Facebook Messenger/Workplace Thread ID to post in. Cannot be a single user chat.||
-|`--discord-webhook-url`|Discord webhook URL to use to post messages.||
+|`--facebook-token`|Facebook Messenger/Workplace token (must have _Message Any Member_ and _Group Chat Bot_ permissions).|
+|`--facebook-thread`|Facebook Messenger/Workplace Thread ID to post in. Cannot be a single user chat.|
+|`--discord-webhook-url`|Discord webhook URL to use to post messages.|
 
 ## Logs
 
