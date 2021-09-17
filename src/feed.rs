@@ -41,10 +41,13 @@ pub async fn fetch_feed(cache: Tree, url: String) -> Result<Vec<Cap>> {
 		.entries
 		.into_iter()
 		.filter_map(|entry| {
-			entry.links.clone().first().map(|l| Item {
-				guid: entry.id,
-				link: l.href.to_string(),
-			})
+			if entry.links.len() == 1 {
+				Some(Item { guid: entry.id, link: entry.links.first().unwrap().href.clone() })
+			} else if let Some(link) = entry.links.into_iter().find(|link| link.media_type == Some("application/cap+xml".to_string())) {
+				Some(Item { guid: entry.id, link: link.href })
+			} else {
+				None
+			}
 		})
 		.collect_vec();
 	debug!(%url, ?items, "extracted {} items", items.len());
