@@ -12,6 +12,7 @@ use output::OutputFormat;
 use crate::output::Out;
 
 mod cap;
+mod discord;
 mod facebook;
 mod feed;
 mod geodirs;
@@ -84,6 +85,10 @@ pub struct Args {
 	/// This cannot be a single user chat, and the bot must already be in the group/thread.
 	#[structopt(long)]
 	facebook_thread: Option<String>,
+
+	/// Discord webhook URL to use to post messages.
+	#[structopt(long)]
+	discord_webhook_url: Option<String>,
 }
 
 #[tokio::main]
@@ -194,6 +199,12 @@ async fn main() -> Result<()> {
 		info!(%thread, "sending to workplace");
 		facebook::send(token, thread, &out).await?;
 		debug!(%thread, "sent to workplace");
+	}
+
+	if let Some(webhook_url) = &args.discord_webhook_url {
+		info!("sending to discord");
+		discord::send(webhook_url, &out).await?;
+		debug!("sent to discord");
 	}
 
 	info!("all done");

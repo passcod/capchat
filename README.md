@@ -27,6 +27,7 @@ You can make your own boundary GeoJSONs with https://geoman.io/geojson-editor.
 |`--image-width`|Maximum width of image in pixels for `text+map` output format (default 512).|
 |`--facebook-token`|Facebook Messenger/Workplace token (must have _Message Any Member_ and _Group Chat Bot_ permissions).||
 |`--facebook-thread`|Facebook Messenger/Workplace Thread ID to post in. Cannot be a single user chat.||
+|`--discord-webhook-url`|Discord webhook URL to use to post messages.||
 
 ## Logs
 
