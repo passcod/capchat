@@ -14,6 +14,7 @@ repository = "https://github.com/passcod/capchat"
 readme = "README.md"
 
 edition = "2018"
+resolver = "2"
 exclude = ["/pkg", "/bin", "/.github"]
 
 [[bin]]
@@ -43,6 +44,9 @@ tokio = { version = "1.5.0", features = ["full"] }
 tracing = "0.1.25"
 tracing-subscriber = "0.2.17"
 usvg = "0.18.0"
+
+[target.aarch64-apple-darwin.dependencies]
+reqwest = { version = "0.11.3", features = ["gzip", "json", "multipart"] }
 
 [build-dependencies]
 embed-resource = "1.6.1"
