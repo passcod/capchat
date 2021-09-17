@@ -41,7 +41,9 @@ pub async fn fetch_feed(cache: Tree, url: String) -> Result<Vec<Cap>> {
 		media_type.subtype().as_str(),
 		media_type.suffix().map(|s| s.as_str()),
 	) {
-		(mime::APPLICATION, "atom", Some("xml")) => todo!("atom support"),
+		(mime::APPLICATION, "atom", Some("xml")) => {
+			parse_atom(&url, &body)?
+		},
 		(mime::APPLICATION, "rss", Some("xml")) | (mime::APPLICATION, "xml", None) => {
 			parse_rss(&url, &body)?
 		}
@@ -86,8 +88,18 @@ fn parse_rss(url: &str, body: &str) -> Result<Vec<Item>> {
 	let mut rss: Rss = serde_xml_rs::from_str(body)?;
 	trace!(%url, ?rss, "parsed rss");
 
-	let items = take(&mut rss.channel.items);
-	info!(%url, ?rss, "found {} items in rss", items.len());
+	let items: Vec<Item> = take(&mut rss.channel.items).into_iter().map(Item::from).collect();
+	info!(%url, "found {} items in rss", items.len());
+
+	Ok(items)
+}
+
+fn parse_atom(url: &str, body: &str) -> Result<Vec<Item>> {
+	let mut atom: Atom = serde_xml_rs::from_str(body)?;
+	trace!(%url, ?atom, "parsed atom");
+
+	let items: Vec<Item> = take(&mut atom.entries).into_iter().map(Item::from).collect();
+	info!(%url, "found {} items in atom", items.len());
 
 	Ok(items)
 }
@@ -98,26 +110,53 @@ struct Rss {
 }
 
 #[derive(Clone, Debug, Deserialize)]
+#[serde(rename = "feed")]
+struct Atom {
+	#[serde(rename = "entry")]
+	pub entries: Vec<AtomEntry>,
+}
+
+#[derive(Clone, Debug, Deserialize)]
 struct Channel {
-	pub title: String,
-	pub link: String,
-	pub description: String,
-
-	#[serde(rename = "pubDate")]
-	pub pub_date: String,
-
 	#[serde(rename = "item")]
-	pub items: Vec<Item>,
+	pub items: Vec<RssItem>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
 pub struct Item {
 	pub title: String,
 	pub guid: String,
-	pub category: String,
-	pub description: String,
 	pub link: String,
+}
 
-	#[serde(rename = "pubDate")]
-	pub pub_date: String,
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
+struct RssItem {
+	title: String,
+	guid: String,
+	link: String,
+}
+
+impl From<RssItem> for Item {
+	fn from(item: RssItem) -> Self {
+		Self { title: item.title, guid: item.guid, link: item.link }
+	}
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
+struct AtomEntry {
+	title: String,
+	id: String,
+	#[serde(rename = "link")]
+	link: AtomLink,
+}
+
+impl From<AtomEntry> for Item {
+	fn from(entry: AtomEntry) -> Self {
+		Self { title: entry.title, guid: entry.id, link: entry.link.href }
+	}
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
+struct AtomLink {
+	href: String,
 }
