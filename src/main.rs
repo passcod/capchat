@@ -2,7 +2,7 @@ use std::{collections::HashSet, env::var, path::PathBuf};
 
 use color_eyre::eyre::Result;
 use futures::future::try_join_all;
-use geo::intersects::Intersects;
+use geo::prelude::{Contains, Intersects};
 use structopt::StructOpt;
 use tokio::{fs::File, io::AsyncWriteExt};
 use tracing::{debug, info};
@@ -115,7 +115,7 @@ async fn main() -> Result<()> {
 
 	debug!(path=?args.cache_db, "opening sled database");
 	let db = sled::open(&args.cache_db)?;
-	db.drop_tree("cache")?; // DEV
+	// db.drop_tree("cache")?; // DEV
 	let cache = db.open_tree("cache")?;
 
 	let mut caps = try_join_all(args.cap.iter().cloned().map(move |url| {
@@ -146,13 +146,18 @@ async fn main() -> Result<()> {
 				.iter()
 				.map(|a| &a.polygons)
 				.flatten()
-				.any(|p| bounds.intersects(p))
+				.any(|p| bounds.intersects(p) || bounds.contains(p))
 		});
 		info!(caps=%caps.len(), "filtered caps against boundaries");
 	}
 
 	caps.retain(|cap| cap.info.severity >= args.severity);
 	info!(caps=%caps.len(), severity=?args.severity, "filtered caps against severity");
+
+	if caps.is_empty() {
+		info!("nothing to do");
+		return Ok(());
+	}
 
 	info!("formatting for output");
 	let out = match args.format {
