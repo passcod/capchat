@@ -6,12 +6,13 @@ use std::{
 	str::FromStr,
 };
 
+use cheap_ruler::{CheapRuler, DistanceUnit};
 use chrono::{DateTime, Utc};
 use color_eyre::eyre::{eyre, Result};
-use geo::{CoordFloat, CoordNum, Coordinate, GeometryCollection, LineString, Polygon};
+use geo::{CoordFloat, CoordNum, Coordinate, GeometryCollection, LineString, Point, Polygon};
 use geojson::{FeatureCollection, GeoJson};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use tracing::{debug, error, info, trace};
+use tracing::{debug, error, info, trace, warn};
 
 use crate::feed::Item;
 
@@ -37,8 +38,22 @@ pub async fn fetch_cap(item: Item) -> Result<Cap> {
 	debug!(%guid, chars=%body.chars().count(), "decoded body as text");
 	trace!(%guid, body=%body, "decoded body");
 
-	let cap: Cap = serde_xml_rs::from_str(&body)?;
+	let mut cap: Cap = serde_xml_rs::from_str(&body)?;
 	trace!(%guid, ?cap, "parsed cap");
+
+	for area in &mut cap.info.areas {
+		for circle in &area.circles {
+			debug!(%guid, %circle, "converting circle to polygon");
+			if let Some(poly) = circle_to_polygon(circle) {
+				trace!(%guid, ?poly, "circle polygon");
+				area.polygons.push(poly);
+			} else {
+				warn!(%guid, %circle, "failed to convert circle to polygon");
+			}
+		}
+
+		area.circles = Vec::new();
+	}
 
 	info!(
 		%guid,
@@ -135,11 +150,16 @@ pub struct Area {
 	pub desc: String,
 
 	#[serde(
+		default,
 		rename = "polygon",
 		deserialize_with = "polygons_de",
-		serialize_with = "polygons_ser"
+		serialize_with = "polygons_ser",
+		skip_serializing_if = "Vec::is_empty"
 	)]
 	pub polygons: Vec<Polygon<f64>>,
+
+	#[serde(default, rename = "circle", skip_serializing_if = "Vec::is_empty")]
+	pub circles: Vec<String>,
 }
 
 fn parameters_de<'de, D>(deserializer: D) -> Result<HashMap<String, String>, D::Error>
@@ -214,4 +234,36 @@ where
 	let fc = FeatureCollection::from(&gc);
 	let geojson = GeoJson::FeatureCollection(fc);
 	geojson.serialize(serializer)
+}
+
+fn circle_to_polygon(circle: &str) -> Option<Polygon<f64>> {
+	let (y, x, r) = circle
+		.split_once(' ')
+		.and_then(|(p, r)| {
+			p.split_once(',').map(|(y, x)| {
+				f64::from_str(y).ok().and_then(|y| {
+					f64::from_str(x)
+						.ok()
+						.and_then(|x| f64::from_str(r).ok().map(|r| (y, x, r)))
+					// "it seemed like a good idea at the time"
+				})
+			})
+		})
+		.flatten()?;
+
+	// https://docs.oasis-open.org/emergency/cap/v1.2/CAP-v1.2-os.html#_Toc97699550
+	let cr = CheapRuler::<f64>::new(x, DistanceUnit::Kilometers);
+	let center = Point::from(Coordinate { x, y });
+
+	const EDGES: u8 = 32;
+
+	Some(Polygon::new(
+		(0..EDGES)
+			.map(|i| {
+				let bearing = 360.0 * (f64::from(i) / f64::from(EDGES));
+				Coordinate::from(cr.destination(&center, r, bearing))
+			})
+			.collect(),
+		Vec::new(),
+	))
 }

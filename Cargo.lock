@@ -168,6 +168,7 @@ checksum = "c4872d67bab6358e59559027aa3b9157c53d9358c51423c17554809a8858e0f8"
 name = "capchat"
 version = "0.5.0"
 dependencies = [
+ "cheap-ruler",
  "chrono",
  "color-eyre",
  "embed-resource",
@@ -206,6 +207,16 @@ name = "cfg-if"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
+
+[[package]]
+name = "cheap-ruler"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0796291d66cca8308db7f4977b73957e8d7c0a3626ba4a11f2b503c531bc0622"
+dependencies = [
+ "geo-types",
+ "num-traits",
+]
 
 [[package]]
 name = "chrono"

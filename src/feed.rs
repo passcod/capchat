@@ -42,9 +42,19 @@ pub async fn fetch_feed(cache: Tree, url: String) -> Result<Vec<Cap>> {
 		.into_iter()
 		.filter_map(|entry| {
 			if entry.links.len() == 1 {
-				Some(Item { guid: entry.id, link: entry.links.first().unwrap().href.clone() })
-			} else if let Some(link) = entry.links.into_iter().find(|link| link.media_type == Some("application/cap+xml".to_string())) {
-				Some(Item { guid: entry.id, link: link.href })
+				Some(Item {
+					guid: entry.id,
+					link: entry.links.first().unwrap().href.clone(),
+				})
+			} else if let Some(link) = entry
+				.links
+				.into_iter()
+				.find(|link| link.media_type == Some("application/cap+xml".to_string()))
+			{
+				Some(Item {
+					guid: entry.id,
+					link: link.href,
+				})
 			} else {
 				None
 			}

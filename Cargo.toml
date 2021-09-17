@@ -21,6 +21,7 @@ exclude = ["/pkg", "/bin", "/.github"]
 name = "capchat"
 
 [dependencies]
+cheap-ruler = "0.3.0"
 chrono = { version = "0.4.19", features = ["serde"] }
 color-eyre = "0.5.11"
 feed-rs = "1.0.0"
@@ -51,3 +52,7 @@ reqwest = { version = "0.11.3", features = ["gzip", "json", "multipart"] }
 
 [build-dependencies]
 embed-resource = "1.6.1"
+
+[profile.dev.package.geo]
+debug-assertions = false
+# https://github.com/georust/geo/blob/324868d2c67aa22ccadb51c4960586cbaab67084/geo/src/algorithm/relate/geomgraph/edge_end_bundle_star.rs#L112
