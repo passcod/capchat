@@ -46,7 +46,3 @@ usvg = "0.18.0"
 
 [build-dependencies]
 embed-resource = "1.6.1"
-
-[profile.release]
-lto = true
-codegen-units = 1
