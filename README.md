@@ -37,6 +37,22 @@ To decrease verbosity, use `-q`.
 Additionally, and overriding any of these options, the `RUST_LOG` environment variable is respected.
 See [tracing-subscriber](https://docs.rs/tracing-subscriber/*/tracing_subscriber/filter/struct.EnvFilter.html) for syntax.
 
+## Example
+
+> ![northland map](./example.png)
+>
+> SEVERE THUNDERSTORM WATCH
+>
+> 🟡  **[Auckland,Waikato]**  6 hours from _04:30am Thursday_ to _11:00am Thursday_
+>
+> Updated at 4:30pm to extend risk of severe thunderstorms to all of northern Waikato
+>
+> Thunderstorms are expected to develop over the Auckland region this afternoon, and spread southwards into northern Waikato towards evening.
+> These thunderstorms will be accompanied by localised heavy rain and small hail.  There is also a low risk of a small tornado or funnel cloud.
+> Between 4pm and 10pm today (Thursday) in Auckland, and between 6pm and 11pm in northern Waikato, a few of these thunderstorms could be severe producing localised downpours of 25-40mm/hr.
+> Rainfall of this intensity can cause surface and/or flash flooding, especially about low-lying areas such as streams, rivers or narrow valleys, and may also lead to slips.
+> Driving conditions will also be hazardous with surface flooding and poor visibility in heavy rain.
+
 ## CAP list
 
 ### Aotearoa (NZ)
