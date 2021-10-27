@@ -61,3 +61,4 @@ See [tracing-subscriber](https://docs.rs/tracing-subscriber/*/tracing_subscriber
 - Weather: https://alerts.metservice.com/cap/rss
 - Earthquake: https://api.geonet.org.nz/cap/1.2/GPA1.0/feed/atom1.0/quake
 - Civil Defence: https://alerthub.civildefence.govt.nz/rss/pwp
+- Regional Emergencies: https://api.preparecenter.org/v1/org/nzl/alerts/rss
