@@ -98,27 +98,34 @@ impl Eq for Cap {}
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Info {
+	#[serde(default)]
 	pub category: String,
+	#[serde(default)]
 	pub event: String,
+	#[serde(default)]
 	pub urgency: String,
 	pub severity: Severity,
+	#[serde(default)]
 	pub certainty: String,
 	pub onset: DateTime<Utc>,
 	pub expires: DateTime<Utc>,
+	#[serde(default)]
 	pub headline: String,
+	#[serde(default)]
 	pub description: String,
+	#[serde(default)]
 	pub instruction: String,
 
-	#[serde(rename = "responseType")]
+	#[serde(default, rename = "responseType")]
 	pub response_type: String,
 
-	#[serde(rename = "senderName")]
+	#[serde(default, rename = "senderName")]
 	pub sender_name: String,
 
-	#[serde(rename = "parameter", deserialize_with = "parameters_de")]
+	#[serde(default, rename = "parameter", deserialize_with = "parameters_de")]
 	pub parameters: HashMap<String, String>,
 
-	#[serde(rename = "area")]
+	#[serde(default, rename = "area")]
 	pub areas: Vec<Area>,
 }
 
