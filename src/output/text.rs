@@ -1,5 +1,6 @@
 use std::collections::HashSet;
 
+use chrono::Local;
 use color_eyre::eyre::Result;
 use itertools::Itertools;
 
@@ -32,8 +33,8 @@ pub fn text(caps: HashSet<Cap>) -> Result<Out> {
 							.expires
 							.signed_duration_since(c.info.onset)
 							.num_hours(),
-						c.info.onset.format("%I:%M%P %A"),
-						c.info.expires.format("%I:%M%P %A"),
+						c.info.onset.with_timezone(&Local).format("%I:%M%P %A"),
+						c.info.expires.with_timezone(&Local).format("%I:%M%P %A"),
 						c.info.description,
 					)
 					.trim_start()
