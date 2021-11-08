@@ -146,12 +146,14 @@ async fn main() -> Result<()> {
 	if !bounds.0.is_empty() {
 		info!(boundaries=%bounds.0.len(), "checking intersections");
 		caps.retain(|cap| {
-			cap.info
-				.areas
-				.iter()
-				.map(|a| &a.polygons)
-				.flatten()
-				.any(|p| bounds.intersects(p) || bounds.contains(p))
+			cap.info.areas.is_empty()
+				|| cap
+					.info
+					.areas
+					.iter()
+					.map(|a| &a.polygons)
+					.flatten()
+					.any(|p| bounds.intersects(p) || bounds.contains(p))
 		});
 		info!(caps=%caps.len(), "filtered caps against boundaries");
 	}
